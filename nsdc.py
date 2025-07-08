@@ -63,4 +63,3 @@ async def vc_kick(ctx, member: discord.Member):
 
 bot.run("MTM5MjEwNjAwNjc3NDgxMjY5Mg.GrHCkA.y8oRhANjFquVhIj1hA3_-8cy0MTucsOmhfndNk")
 
-DISCORD_TOKEN = MTM5MjEwNjAwNjc3NDgxMjY5Mg.GrHCkA.y8oRhANjFquVhIj1hA3_-8cy0MTucsOmhfndNk
