@@ -61,5 +61,5 @@ async def vc_kick(ctx, member: discord.Member):
     else:
         await ctx.send("❌ You must be in a VC to kick someone.")
 
-bot.run("MTM5MjEwNjAwNjc3NDgxMjY5Mg.GrHCkA.y8oRhANjFquVhIj1hA3_-8cy0MTucsOmhfndNk")
+bot.run("MTM5MjEwNjAwNjc3NDgxMjY5Mg.GKvb7D.AdYAomzgFdtNPBJXV47P0yP8-J4lMIbUP-dKWc")
 
