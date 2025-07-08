@@ -60,6 +60,3 @@ async def vc_kick(ctx, member: discord.Member):
             await ctx.send("❌ That user is not in your VC.")
     else:
         await ctx.send("❌ You must be in a VC to kick someone.")
-
-bot.run("MTM5MjEwNjAwNjc3NDgxMjY5Mg.GKvb7D.AdYAomzgFdtNPBJXV47P0yP8-J4lMIbUP-dKWc")
-
