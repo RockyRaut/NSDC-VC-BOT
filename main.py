@@ -1,4 +1,4 @@
-import discord
+)import discord
 from discord.ext import commands
 from discord import app_commands
 
@@ -33,7 +33,7 @@ async def vc_lock(interaction: discord.Interaction):
         await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
         await interaction.response.send_message(f"🔒 Locked VC: **{channel.name}**")
     except Exception as e:
-        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
 
 @bot.command()
 async def vc_lock(ctx, role: discord.Role = None):
