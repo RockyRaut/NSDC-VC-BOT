@@ -267,5 +267,45 @@ async def vc_kick(ctx, member: discord.Member):
             await ctx.send("❌ That user is not in your VC.")
     else:
         await ctx.send("❌ You must be in a VC to kick someone.")
+@bot.tree.command(name="vc_create", description="Create a new voice channel")
+@app_commands.describe(
+    name="Name of the new voice channel",
+    bitrate="Bitrate in bits (optional, default 64000)",
+    user_limit="User limit (optional, 0 for unlimited)",
+    category="Category channel to place the new VC in (optional)"
+)
+async def vc_create(
+    interaction: discord.Interaction, 
+    name: str, 
+    bitrate: int = 64000, 
+    user_limit: int = 0, 
+    category: discord.CategoryChannel | None = None
+):
+    guild = interaction.guild
+    if not guild:
+        await interaction.response.send_message("❌ This command can only be used in a guild.", ephemeral=True)
+        return
+
+    # Validate bitrate (Discord max bitrate depends on Nitro level, usually 96000 for normal servers)
+    if bitrate < 8000 or bitrate > 96000:
+        await interaction.response.send_message("❌ Bitrate must be between 8000 and 96000.", ephemeral=True)
+        return
+
+    if user_limit < 0 or user_limit > 99:
+        await interaction.response.send_message("❌ User limit must be between 0 and 99.", ephemeral=True)
+        return
+
+    try:
+        new_channel = await guild.create_voice_channel(
+            name=name,
+            bitrate=bitrate,
+            user_limit=user_limit,
+            category=category
+        )
+        await interaction.response.send_message(f"✅ Created voice channel: **{new_channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error creating voice channel: {e}", ephemeral=True)
+
+
 import os
 bot.run(os.getenv("DISCORD_TOKEN"))
