@@ -19,35 +19,75 @@ async def on_ready():
         print(f"Error syncing commands: {e}")
     print(f"🇳🇵 NEPALSOCIALDC VC Bot is online as {bot.user}")
 
-@bot.tree.command(name="vc-lock", description="Locks your current voice channel")
-async def vc_lock(interaction: discord.Interaction):
-    if not interaction.user.voice or not interaction.user.voice.channel:
-        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
-        return
-
-    channel = interaction.user.voice.channel
-
-    try:
-        overwrite = channel.overwrites_for(interaction.guild.default_role)
-        overwrite.connect = False
-        await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
-        await interaction.response.send_message(f"🔒 Locked VC: **{channel.name}**")
-    except Exception as e:
-        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
-        
-@bot.tree.command(name="vc-unlock", description="unlocks your current voice channel")
+@bot.tree.command(name="vc_unlock", description="Unlocks your current voice channel")
 async def vc_unlock(interaction: discord.Interaction):
     if not interaction.user.voice or not interaction.user.voice.channel:
         await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
         return
-
+    
     channel = interaction.user.voice.channel
 
     try:
         overwrite = channel.overwrites_for(interaction.guild.default_role)
-        overwrite.connect = False
+        overwrite.connect = None  # Removes the overwrite, unlocking
         await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
-        await interaction.response.send_message(f"🔒 Unlocked VC: **{channel.name}**")
+        await interaction.response.send_message(f"🔓 Unlocked VC: **{channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
+
+@bot.tree.command(name="vc_set_user", description="Allow a user to connect to your voice channel")
+@app_commands.describe(user="User to allow to connect")
+async def vc_set_user(interaction: discord.Interaction, user: discord.Member):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+
+    try:
+        overwrite = channel.overwrites_for(user)
+        overwrite.connect = True
+        await channel.set_permissions(user, overwrite=overwrite)
+        await interaction.response.send_message(f"✅ Allowed {user.mention} to connect to **{channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
+
+@bot.tree.command(name="vc_kick_members", description="Kick all members from your voice channel except yourself")
+async def vc_kick_members(interaction: discord.Interaction):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+    members = channel.members
+
+    try:
+        kicked = []
+        for member in members:
+            if member != interaction.user:
+                await member.move_to(None)  # Disconnect member
+                kicked.append(member.display_name)
+        await interaction.response.send_message(f"👢 Kicked members: {', '.join(kicked)}")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
+
+@bot.tree.command(name="vc_invite_member", description="Invite a user to your voice channel (allow connect)")
+@app_commands.describe(user="User to invite")
+async def vc_invite_member(interaction: discord.Interaction, user: discord.Member):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+
+    try:
+        overwrite = channel.overwrites_for(user)
+        overwrite.connect = True
+        await channel.set_permissions(user, overwrite=overwrite)
+        await interaction.response.send_message(f"📨 Invited {user.mention} to **{channel.name}**")
     except Exception as e:
         await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
 
