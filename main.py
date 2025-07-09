@@ -19,6 +19,22 @@ async def on_ready():
         print(f"Error syncing commands: {e}")
     print(f"🇳🇵 NEPALSOCIALDC VC Bot is online as {bot.user}")
 
+@bot.tree.command(name="vc-lock", description="Locks your current voice channel")
+async def vc_lock(interaction: discord.Interaction):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+
+    try:
+        overwrite = channel.overwrites_for(interaction.guild.default_role)
+        overwrite.connect = False
+        await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+        await interaction.response.send_message(f"🔒 Locked VC: **{channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
 @bot.tree.command(name="vc_unlock", description="Unlocks your current voice channel")
 async def vc_unlock(interaction: discord.Interaction):
     if not interaction.user.voice or not interaction.user.voice.channel:
