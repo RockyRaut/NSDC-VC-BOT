@@ -1,4 +1,5 @@
 import discord
+import asyncio
 from discord.ext import commands
 from discord import app_commands
 
@@ -34,6 +35,117 @@ async def vc_lock(interaction: discord.Interaction):
         await interaction.response.send_message(f"🔒 Locked VC: **{channel.name}**")
     except Exception as e:
         await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
+@bot.tree.command(name="vc_set_user_limit", description="Set user limit of your current voice channel")
+@app_commands.describe(limit="Number of users allowed (0 = unlimited)")
+async def vc_set_user_limit(interaction: discord.Interaction, limit: int):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+    
+    if limit < 0 or limit > 99:
+        await interaction.response.send_message("❌ Limit must be between 0 and 99.", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+    try:
+        await channel.edit(user_limit=limit)
+        msg = f"🔢 Set user limit to {limit if limit != 0 else 'unlimited'} for **{channel.name}**"
+        await interaction.response.send_message(msg)
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
+
+# Kick user command
+@bot.tree.command(name="vc_kick_user", description="Kick a user from your voice channel")
+@app_commands.describe(user="User to kick from VC")
+async def vc_kick_user(interaction: discord.Interaction, user: discord.Member):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+    
+    channel = interaction.user.voice.channel
+
+    if user not in channel.members:
+        await interaction.response.send_message(f"❌ {user.display_name} is not in your voice channel.", ephemeral=True)
+        return
+
+    try:
+        await user.move_to(None)
+        await interaction.response.send_message(f"👢 Kicked {user.mention} from **{channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+
+
+# Vote kick command
+@bot.tree.command(name="vc_vote_kick", description="Start a vote kick for a user in your voice channel")
+@app_commands.describe(user="User to vote kick")
+async def vc_vote_kick(interaction: discord.Interaction, user: discord.Member):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+    
+    channel = interaction.user.voice.channel
+
+    if user not in channel.members:
+        await interaction.response.send_message(f"❌ {user.display_name} is not in your voice channel.", ephemeral=True)
+        return
+    
+    if user == interaction.user:
+        await interaction.response.send_message("❌ You cannot vote kick yourself.", ephemeral=True)
+        return
+
+    vote_message = await interaction.response.send_message(
+        f"📢 Vote kick started for {user.mention}!\n"
+        "React with 👍 to vote to kick.\n"
+        "You have 30 seconds.",
+        ephemeral=False
+    )
+    
+    # Fetch the message (to add reactions)
+    # Note: interaction.response.send_message returns None, use followup instead or get the message after sending.
+    # We'll use followup with wait=True to get message object
+
+    msg = await interaction.followup.send(
+        f"📢 Vote kick started for {user.mention}!\n"
+        "React with 👍 to vote to kick.\n"
+        "You have 30 seconds.",
+        wait=True
+    )
+
+    await msg.add_reaction("👍")
+
+    def check(reaction, reactor):
+        return (
+            reaction.message.id == msg.id and
+            str(reaction.emoji) == "👍" and
+            reactor.voice and reactor.voice.channel == channel and
+            reactor != user
+        )
+
+    try:
+        # Wait 30 seconds to collect votes
+        await asyncio.sleep(30)
+
+        msg = await interaction.channel.fetch_message(msg.id)
+        reaction = discord.utils.get(msg.reactions, emoji="👍")
+
+        if reaction is None:
+            count = 0
+        else:
+            count = reaction.count - 1  # exclude bot's own reaction
+
+        # Calculate majority
+        # Majority means more than half of the people in the VC (excluding the target user)
+        voters_needed = (len(channel.members) - 1) // 2 + 1
+
+        if count >= voters_needed:
+            await user.move_to(None)
+            await interaction.followup.send(f"👢 Vote passed! {user.mention} was kicked from **{channel.name}**.")
+        else:
+            await interaction.followup.send(f"❌ Vote failed! Not enough votes to kick {user.mention}.")
+    except Exception as e:
+        await interaction.followup.send(f"⚠️ Error: {e}")
 
 @bot.tree.command(name="vc_unlock", description="Unlocks your current voice channel")
 async def vc_unlock(interaction: discord.Interaction):
