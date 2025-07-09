@@ -1,16 +1,39 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 intents = discord.Intents.default()
 intents.members = True
 intents.voice_states = True
 intents.guilds = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-bot = commands.Bot(command_prefix='!', intents=intents)
-
+# Event to sync slash commands
 @bot.event
 async def on_ready():
+    await bot.wait_until_ready()
+    try:
+        synced = await bot.tree.sync()
+        print(f"Slash commands synced! {len(synced)} commands registered.")
+    except Exception as e:
+        print(f"Error syncing commands: {e}")
     print(f"🇳🇵 NEPALSOCIALDC VC Bot is online as {bot.user}")
+
+@bot.tree.command(name="vc-lock", description="Locks your current voice channel")
+async def vc_lock(interaction: discord.Interaction):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+
+    try:
+        overwrite = channel.overwrites_for(interaction.guild.default_role)
+        overwrite.connect = False
+        await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+        await interaction.response.send_message(f"🔒 Locked VC: **{channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True
 
 @bot.command()
 async def vc_lock(ctx, role: discord.Role = None):
