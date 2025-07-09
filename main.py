@@ -34,6 +34,22 @@ async def vc_lock(interaction: discord.Interaction):
         await interaction.response.send_message(f"🔒 Locked VC: **{channel.name}**")
     except Exception as e:
         await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
+        
+@bot.tree.command(name="vc-unlock", description="unlocks your current voice channel")
+async def vc_unlock(interaction: discord.Interaction):
+    if not interaction.user.voice or not interaction.user.voice.channel:
+        await interaction.response.send_message("❌ You must be in a voice channel!", ephemeral=True)
+        return
+
+    channel = interaction.user.voice.channel
+
+    try:
+        overwrite = channel.overwrites_for(interaction.guild.default_role)
+        overwrite.connect = False
+        await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+        await interaction.response.send_message(f"🔒 Unlocked VC: **{channel.name}**")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Error: {e}", ephemeral=True)
 
 @bot.command()
 async def vc_lock(ctx, role: discord.Role = None):
