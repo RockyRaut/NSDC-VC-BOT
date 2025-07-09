@@ -1,3 +1,4 @@
+import os
 import discord
 from discord.ext import commands
 
@@ -61,4 +62,4 @@ async def vc_kick(ctx, member: discord.Member):
     else:
         await ctx.send("❌ You must be in a VC to kick someone.")
 
-    bot.run(os.getenv("DISCORD_TOKEN"))
+    bot.run(os.getenv(DISCORD_TOKEN))
